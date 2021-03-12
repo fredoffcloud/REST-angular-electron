@@ -3,7 +3,7 @@ import * as path from 'path';
 import { electron } from 'process';
 import * as url from 'url';
 
-let appVersion = app.getVersion()
+const appVersion = app.getVersion();
 
 let win: BrowserWindow = null;
 const args = process.argv.slice(1),
@@ -44,7 +44,10 @@ function createWindow(): BrowserWindow {
       slashes: true
     }));
   }
-
+  win.once('ready-to-show', () => { 
+    autoUpdater.checkForUpdates();
+    // autoUpdater.checkForUpdatesAndNotify();
+  });
   // Emitted when the window is closed.
   win.on('closed', () => {
     // Dereference the window object, usually you would store window
@@ -98,3 +101,13 @@ ipcMain.on('ge-app-version', function (event, arg) {
   // event.returnValue = app.getVersion();
 });
 // ipcMain
+
+
+ipcMain.on('app_version', (event) => {
+  event.sender.send('app_version', { version: appVersion });
+});
+
+autoUpdater.on('update-available', () => { win.webContents.send('update_available');
+});
+autoUpdater.on('update-downloaded', () => { win.webContents.send('update_downloaded');
+});
